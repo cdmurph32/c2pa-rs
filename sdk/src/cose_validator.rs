@@ -20,10 +20,7 @@ use x509_parser::{
     prelude::*,
 };
 
-#[cfg(not(target_arch = "wasm32"))]
 use crate::validator::{get_validator, CoseValidator};
-#[cfg(target_arch = "wasm32")]
-use crate::wasm::webcrypto_validator::validate_async;
 use crate::{
     asn1::rfc3161::TstInfo,
     error::{Error, Result},

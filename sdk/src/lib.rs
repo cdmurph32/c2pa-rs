@@ -147,8 +147,6 @@ pub mod validation_status;
 pub(crate) use utils::xmp_inmemory_utils;
 pub(crate) use utils::{cbor_types, hash_utils};
 pub(crate) mod validator;
-#[cfg(target_arch = "wasm32")]
-pub mod wasm;
 
 /// The internal name of the C2PA SDK
 pub const NAME: &str = "c2pa-rs";
