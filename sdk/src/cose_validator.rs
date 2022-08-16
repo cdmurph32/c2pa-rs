@@ -897,16 +897,7 @@ async fn validate_with_cert_async(
     data: &[u8],
     der_bytes: &[u8],
 ) -> Result<String> {
-    let (_rem, signcert) =
-        X509Certificate::from_der(der_bytes).map_err(|_err| Error::CoseMissingKey)?;
-    let pk = signcert.public_key();
-    let pk_der = pk.raw;
-
-    if validate_async(signing_alg, sig, data, pk_der).await? {
-        Ok(extract_subject_from_cert(&signcert)?)
-    } else {
-        Err(Error::CoseSignature)
-    }
+    Err(Error::CoseSignature)
 }
 
 #[cfg(not(target_arch = "wasm32"))]
