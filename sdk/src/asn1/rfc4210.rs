@@ -3,6 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 //! ASN.1 types defined by RFC 4210.
+#![cfg(not(target_os = "wasi"))]
 
 use bcder::{
     decode::{Constructed, Source},

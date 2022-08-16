@@ -12,6 +12,7 @@ Some RFC 5652 types are defined in the `x509-certificate` crate, which
 this crate relies on for certificate parsing functionality.
 */
 
+#![cfg(not(target_os = "wasi"))]
 use std::{
     fmt::{Debug, Formatter},
     io::Write,

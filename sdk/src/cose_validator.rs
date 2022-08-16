@@ -11,6 +11,7 @@
 // specific language governing permissions and limitations under
 // each license.
 
+#![cfg(not(target_os = "wasi"))]
 use ciborium::value::Value;
 use conv::*;
 use coset::{sig_structure_data, Label, TaggedCborSerializable};
@@ -20,7 +21,10 @@ use x509_parser::{
     prelude::*,
 };
 
+#[cfg(not(target_arch = "wasm32"))]
 use crate::validator::{get_validator, CoseValidator};
+#[cfg(target_arch = "wasm32")]
+use crate::wasm::webcrypto_validator::validate_async;
 use crate::{
     asn1::rfc3161::TstInfo,
     error::{Error, Result},
@@ -897,7 +901,16 @@ async fn validate_with_cert_async(
     data: &[u8],
     der_bytes: &[u8],
 ) -> Result<String> {
-    Err(Error::CoseSignature)
+    let (_rem, signcert) =
+        X509Certificate::from_der(der_bytes).map_err(|_err| Error::CoseMissingKey)?;
+    let pk = signcert.public_key();
+    let pk_der = pk.raw;
+
+    if validate_async(signing_alg, sig, data, pk_der).await? {
+        Ok(extract_subject_from_cert(&signcert)?)
+    } else {
+        Err(Error::CoseSignature)
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]

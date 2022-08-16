@@ -11,6 +11,7 @@
 // specific language governing permissions and limitations under
 // each license.
 
+#![cfg(not(target_os = "wasi"))]
 use std::convert::TryFrom;
 
 use bcder::decode::Constructed;

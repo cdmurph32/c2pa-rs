@@ -4,6 +4,7 @@
 
 //! ASN.1 types defined by RFC 3161.
 
+#![cfg(not(target_os = "wasi"))]
 use bcder::{
     decode::{Constructed, Malformed, Primitive, Source},
     encode::{self, PrimitiveContent, Values},

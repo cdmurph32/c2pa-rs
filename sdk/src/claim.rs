@@ -18,13 +18,15 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 use uuid::Uuid;
 
+#[cfg(not(target_os = "wasi"))]
+use crate::cose_validator::{get_signing_info, verify_cose, verify_cose_async};
+
 use crate::{
     assertion::{
         get_thumbnail_image_type, get_thumbnail_instance, get_thumbnail_type, Assertion,
         AssertionBase, AssertionData,
     },
     assertions::{self, labels, BmffHash, DataHash},
-    cose_validator::{get_signing_info, verify_cose, verify_cose_async},
     error::{Error, Result},
     hashed_uri::HashedUri,
     jumbf::{
@@ -787,6 +789,7 @@ impl Claim {
     }
 
     /// Return information about the signature
+    #[cfg(not(target_os = "wasi"))]
     pub fn signature_info(&self) -> Option<ValidationInfo> {
         let sig = self.signature_val();
         let data = self.data().ok()?;
@@ -794,10 +797,15 @@ impl Claim {
 
         Some(get_signing_info(sig, &data, &mut validation_log))
     }
+    #[cfg(target_os = "wasi")]
+    pub fn signature_info(&self) -> Option<ValidationInfo> {
+        None
+    }
 
     /// Verify claim signature, assertion store and asset hashes
     /// claim - claim to be verified
     /// asset_bytes - reference to bytes of the asset
+    #[cfg(not(target_os = "wasi"))]
     pub async fn verify_claim_async<'a>(
         claim: &Claim,
         asset_bytes: &'a [u8],
@@ -847,9 +855,20 @@ impl Claim {
         )
     }
 
+    #[cfg(target_os = "wasi")]
+    pub async fn verify_claim_async<'a>(
+        _claim: &Claim,
+        _asset_bytes: &'a [u8],
+        _is_provenance: bool,
+        _validation_log: &mut impl StatusTracker,
+    ) -> Result<()> {
+        Err(Error::WasmNoCrypto)
+    }
+
     /// Verify claim signature, assertion store and asset hashes
     /// claim - claim to be verified
     /// asset_bytes - reference to bytes of the asset
+    #[cfg(not(target_os = "wasi"))]
     pub fn verify_claim<'a>(
         claim: &Claim,
         asset_data: &ClaimAssetData<'a>,
@@ -887,6 +906,17 @@ impl Claim {
         Claim::verify_internal(claim, asset_data, is_provenance, verified, validation_log)
     }
 
+    #[cfg(target_os = "wasi")]
+    pub fn verify_claim<'a>(
+        _claim: &Claim,
+        _asset_data: &ClaimAssetData<'a>,
+        _is_provenance: bool,
+        _validation_log: &mut impl StatusTracker,
+    ) -> Result<()> {
+        Err(Error::WasmNoCrypto)
+    }
+
+    #[cfg(not(target_os = "wasi"))]
     fn verify_internal<'a>(
         claim: &Claim,
         asset_data: &ClaimAssetData<'a>,
