@@ -862,6 +862,7 @@ impl Claim {
         _is_provenance: bool,
         _validation_log: &mut impl StatusTracker,
     ) -> Result<()> {
+        println!("HERE verify_claim_async");
         Err(Error::WasmNoCrypto)
     }
 
@@ -913,6 +914,7 @@ impl Claim {
         _is_provenance: bool,
         _validation_log: &mut impl StatusTracker,
     ) -> Result<()> {
+        println!("HERE verify_claim");
         Err(Error::WasmNoCrypto)
     }
 
