@@ -152,7 +152,7 @@ pub enum Error {
     WasmInvalidContext,
 
     #[error("WASM could not load crypto library")]
-    WasmNoCrypto,
+    WasmNoCrypto { code: String },
 
     /// Unable to generate valid JUMBF for a claim.
     #[error("could not create valid JUMBF for claim")]

@@ -56,8 +56,9 @@ impl WindowOrWorker {
             Self::Window(window) => window.crypto(),
             Self::Worker(worker) => worker.crypto(),
         };
-        println!("Here context.rs");
-        let subtle_crypto = crypto.map_err(|_err| Error::WasmNoCrypto)?.subtle();
+        let subtle_crypto = crypto
+            .map_err(|err| Error::WasmNoCrypto { code: err })?
+            .subtle();
 
         Ok(subtle_crypto)
     }

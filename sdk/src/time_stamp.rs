@@ -301,8 +301,9 @@ pub fn timestamp_data(url: &str, data: &[u8]) -> Result<Vec<u8>> {
     }
     #[cfg(not(feature = "file_io"))]
     {
-        println!("HERE timestamp_data");
-        Err(Error::WasmNoCrypto)
+        Err(Error::WasmNoCrypto {
+            code: "timestamp_data",
+        })
     }
 }
 

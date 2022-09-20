@@ -862,8 +862,9 @@ impl Claim {
         _is_provenance: bool,
         _validation_log: &mut impl StatusTracker,
     ) -> Result<()> {
-        println!("HERE verify_claim_async");
-        Err(Error::WasmNoCrypto)
+        Err(Error::WasmNoCrypto {
+            code: "verify_claim_async",
+        })
     }
 
     /// Verify claim signature, assertion store and asset hashes
@@ -914,8 +915,9 @@ impl Claim {
         _is_provenance: bool,
         _validation_log: &mut impl StatusTracker,
     ) -> Result<()> {
-        println!("HERE verify_claim");
-        Err(Error::WasmNoCrypto)
+        Err(Error::WasmNoCrypto {
+            code: "verify_claim",
+        })
     }
 
     #[cfg(not(target_os = "wasi"))]
