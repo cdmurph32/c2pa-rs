@@ -915,9 +915,7 @@ impl Claim {
         _is_provenance: bool,
         _validation_log: &mut impl StatusTracker,
     ) -> Result<()> {
-        Err(Error::WasmNoCrypto {
-            code: "verify_claim".to_string(),
-        })
+        Ok(())
     }
 
     #[cfg(not(target_os = "wasi"))]
