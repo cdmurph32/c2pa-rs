@@ -151,7 +151,7 @@ pub enum Error {
     #[error("WASM not called from window or worker global scope")]
     WasmInvalidContext,
 
-    #[error("WASM could not load crypto library")]
+    #[error("WASM could not load crypto library {code}")]
     WasmNoCrypto { code: String },
 
     /// Unable to generate valid JUMBF for a claim.
