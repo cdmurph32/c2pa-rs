@@ -863,7 +863,7 @@ impl Claim {
         _validation_log: &mut impl StatusTracker,
     ) -> Result<()> {
         Err(Error::WasmNoCrypto {
-            code: "verify_claim_async",
+            code: "verify_claim_async".to_string(),
         })
     }
 
@@ -916,7 +916,7 @@ impl Claim {
         _validation_log: &mut impl StatusTracker,
     ) -> Result<()> {
         Err(Error::WasmNoCrypto {
-            code: "verify_claim",
+            code: "verify_claim".to_string(),
         })
     }
 
