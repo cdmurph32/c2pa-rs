@@ -10,7 +10,7 @@
 // implied. See the LICENSE-MIT and LICENSE-APACHE files for the
 // specific language governing permissions and limitations under
 // each license.
-
+#![cfg(all(target_arch = "wasm32", not(target_os = "wasi")))]
 use wasm_bindgen::{prelude::*, JsCast, JsValue};
 use web_sys::{SubtleCrypto, Window, WorkerGlobalScope};
 

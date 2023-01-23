@@ -11,6 +11,7 @@
 // specific language governing permissions and limitations under
 // each license.
 
+#![cfg(all(target_arch = "wasm32", not(target_os = "wasi")))]
 use std::convert::TryFrom;
 
 use js_sys::{Array, ArrayBuffer, Object, Reflect, Uint8Array};

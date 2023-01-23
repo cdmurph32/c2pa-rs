@@ -20,9 +20,9 @@ use x509_parser::{
     prelude::*,
 };
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(any(not(target_arch = "wasm32"), target_os = "wasi"))]
 use crate::validator::{get_validator, CoseValidator};
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_os = "wasi")))]
 use crate::wasm::webcrypto_validator::validate_async;
 use crate::{
     asn1::rfc3161::TstInfo,
@@ -777,7 +777,7 @@ pub fn get_signing_info(
         Ok(sign1)
     });
 
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(all(target_arch = "wasm32", not(target_os = "wasi")))]
     {
         ValidationInfo {
             issuer_org,
@@ -787,7 +787,7 @@ pub fn get_signing_info(
             cert_chain: Vec::new(),
         }
     }
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(any(not(target_arch = "wasm32"), target_os = "wasi"))]
     {
         let certs = match sign1 {
             Ok(s) => match get_sign_certs(&s) {
@@ -812,7 +812,7 @@ pub fn get_signing_info(
 /// data:  data that was used to create the cose_bytes, these must match
 /// addition_data: additional optional data that may have been used during signing
 /// returns - Ok on success
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(any(not(target_arch = "wasm32"), target_os = "wasi"))]
 pub fn verify_cose(
     cose_bytes: &[u8],
     data: &[u8],
@@ -909,7 +909,7 @@ pub fn verify_cose(
     Ok(result)
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_os = "wasi")))]
 pub fn verify_cose(
     _cose_bytes: &[u8],
     _data: &[u8],
@@ -920,7 +920,7 @@ pub fn verify_cose(
     Err(Error::CoseVerifier)
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(any(not(target_arch = "wasm32"), target_os = "wasi"))]
 fn validate_with_cert(
     validator: Box<dyn CoseValidator>,
     sig: &[u8],
@@ -940,7 +940,7 @@ fn validate_with_cert(
     }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_os = "wasi")))]
 async fn validate_with_cert_async(
     signing_alg: SigningAlg,
     sig: &[u8],
@@ -959,7 +959,7 @@ async fn validate_with_cert_async(
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(any(not(target_arch = "wasm32"), target_os = "wasi"))]
 async fn validate_with_cert_async(
     signing_alg: SigningAlg,
     sig: &[u8],
