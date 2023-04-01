@@ -11,8 +11,6 @@
 // specific language governing permissions and limitations under
 // each license.
 
-use std::io::Read;
-
 use chrono::{DateTime, NaiveDateTime, Utc};
 use conv::ConvUtil;
 use openssl::ocsp::{self, OcspBasicResponse, OcspCertStatus, OcspRevokedStatus};
@@ -69,7 +67,10 @@ fn get_ocsp_responders(cert_der: &[u8]) -> Option<Vec<String>> {
 /// retrieve the OCSPResponse.
 /// If successful returns OcspData containing the DER encoded OCSPResponse and the DateTime for when this cached response should
 /// be refreshed.  None otherwise.
+#[cfg(not(target_os = "wasi"))]
 pub fn get_ocsp_response(certs: &[Vec<u8>]) -> Option<OcspData> {
+    use std::io::Read;
+
     //} Option<DateTime<Utc>>) {
     // must be in hierarchical order for this to work
     if certs.len() < 2 || !check_chain_order_der(certs) {
@@ -135,6 +136,79 @@ pub fn get_ocsp_response(certs: &[Vec<u8>]) -> Option<OcspData> {
 
                                 let output = OcspData {
                                     ocsp_der: ocsp_rsp,
+                                    next_update: DateTime::from_utc(next_update, chrono::Utc),
+                                };
+
+                                return Some(output);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+#[cfg(target_os = "wasi")]
+pub fn get_ocsp_response(certs: &[Vec<u8>]) -> Option<OcspData> {
+    use futures::executor;
+    use wasmbus_rpc::actor::prelude::*;
+    use wasmcloud_interface_httpclient::*;
+
+    //} Option<DateTime<Utc>>) {
+    // must be in hierarchical order for this to work
+    if certs.len() < 2 || !check_chain_order_der(certs) {
+        return None;
+    }
+
+    if let Some(responders) = get_ocsp_responders(&certs[0]) {
+        for r in responders {
+            let url = url::Url::parse(&r).ok()?;
+            let subject = openssl::x509::X509::from_der(&certs[0]).ok()?;
+            let issuer = openssl::x509::X509::from_der(&certs[1]).ok()?;
+
+            let cert_id = openssl::ocsp::OcspCertId::from_cert(
+                openssl::hash::MessageDigest::sha1(),
+                &subject,
+                &issuer,
+            )
+            .ok()?;
+
+            let mut ocsp_req = ocsp::OcspRequest::new().ok()?;
+            ocsp_req.add_id(cert_id).ok()?;
+            let request_str = base64::encode(ocsp_req.to_der().ok()?);
+
+            let req_url = url.join(&request_str).ok()?;
+
+            //let request = ureq::get(req_url.as_str());
+            let client = HttpClientSender::new();
+            let ctx = Context::default();
+            //TODO: return None on error once this has been tested.
+            let response =
+                executor::block_on(client.request(&ctx, &HttpRequest::get(req_url.as_str())))
+                    .unwrap();
+
+            if response.status_code == 200 {
+                // sanity check response
+                let ocsp_response = ocsp::OcspResponse::from_der(&response.body).ok()?;
+                if ocsp_response.status() == ocsp::OcspResponseStatus::SUCCESSFUL {
+                    if let Ok(basic_response) = ocsp_response.basic() {
+                        if let Some(cert_status) =
+                            get_end_entity_cert_status(certs, &basic_response)
+                        {
+                            if cert_status.status == OcspCertStatus::GOOD
+                                || cert_status.status == OcspCertStatus::REVOKED
+                                    && cert_status.reason == OcspRevokedStatus::REMOVE_FROM_CRL
+                            {
+                                let next_update = NaiveDateTime::parse_from_str(
+                                    &cert_status.next_update.to_string(),
+                                    DATE_FMT,
+                                )
+                                .ok()?;
+
+                                let output = OcspData {
+                                    ocsp_der: response.body,
                                     next_update: DateTime::from_utc(next_update, chrono::Utc),
                                 };
 

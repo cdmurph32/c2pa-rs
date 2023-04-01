@@ -23,6 +23,7 @@ const THUMBNAIL_JPEG_QUALITY: u8 = 80;
 
 ///  utility to generate a thumbnail from a file at path
 /// returns Result (format, image_bits) if successful, otherwise Error
+#[allow(dead_code)]
 pub fn make_thumbnail(path: &std::path::Path) -> Result<(String, Vec<u8>)> {
     let format = ImageFormat::from_path(path)?;
 

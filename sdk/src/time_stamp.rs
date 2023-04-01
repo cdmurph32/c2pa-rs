@@ -127,7 +127,7 @@ pub fn get_ta_url() -> Option<String> {
 
 /// internal only function to work around bug in serialization of TimeStampResponse
 /// so we just return the data directly
-#[cfg(feature = "sign")]
+#[cfg(all(feature = "sign", not(target_os = "wasi")))]
 fn time_stamp_request_http(
     url: &str,
     request: &crate::asn1::rfc3161::TimeStampReq,
@@ -185,6 +185,67 @@ fn time_stamp_request_http(
         }
 
         Ok(response_bytes)
+    } else {
+        Err(Error::CoseTimeStampGeneration)
+    }
+}
+
+#[cfg(all(feature = "sign", target_os = "wasi"))]
+fn time_stamp_request_http(
+    url: &str,
+    request: &crate::asn1::rfc3161::TimeStampReq,
+) -> Result<Vec<u8>> {
+    use bcder::encode::Values;
+    use futures::executor;
+    use wasmbus_rpc::actor::prelude::*;
+    use wasmcloud_interface_httpclient::*;
+
+    const HTTP_CONTENT_TYPE_REQUEST: &str = "application/timestamp-query";
+    const HTTP_CONTENT_TYPE_RESPONSE: &str = "application/timestamp-reply";
+    const CONTENT_TYPE: &str = "Content-Type";
+
+    let mut body = Vec::<u8>::new();
+    request
+        .encode_ref()
+        .write_encoded(bcder::Mode::Der, &mut body)?;
+
+    let client = HttpClientSender::new();
+    let ctx = Context::default();
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        CONTENT_TYPE.to_string(),
+        vec![HTTP_CONTENT_TYPE_REQUEST.to_string()],
+    );
+    let http_request = HttpRequest {
+        method: "post".to_string(),
+        url: url.to_string(),
+        headers,
+        body,
+    };
+    let response = executor::block_on(client.request(&ctx, &http_request))
+        .map_err(|_err| Error::CoseTimeStampGeneration)?;
+    if response.status_code == 200 && response.header[CONTENT_TYPE][0] == HTTP_CONTENT_TYPE_RESPONSE
+    {
+        let res = TimeStampResponse(
+            Constructed::decode(response.body.as_ref(), bcder::Mode::Der, |cons| {
+                TimeStampResp::take_from(cons)
+            })
+            .map_err(|_err| Error::CoseTimeStampGeneration)?,
+        );
+
+        // Verify nonce was reflected, if present.
+        if res.is_success() {
+            if let Some(tst_info) = res
+                .tst_info()
+                .map_err(|_err| Error::CoseTimeStampGeneration)?
+            {
+                if tst_info.nonce != request.nonce {
+                    return Err(Error::CoseTimeStampGeneration);
+                }
+            }
+        }
+
+        Ok(response.body)
     } else {
         Err(Error::CoseTimeStampGeneration)
     }
