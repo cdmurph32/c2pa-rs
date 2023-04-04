@@ -1980,6 +1980,32 @@ impl Store {
         }
     }
 
+    // fetch remote manifest if possible
+    #[cfg(target_os = "wasi")]
+    #[cfg(feature = "file_io")]
+    fn fetch_remote_manifest(url: &str) -> Result<Vec<u8>> {
+        use futures::executor;
+        use wasmbus_rpc::actor::prelude::*;
+        use wasmcloud_interface_httpclient::*;
+
+        let client = HttpClientSender::new();
+        let ctx = Context::default();
+        let response = executor::block_on(client.request(&ctx, &HttpRequest::get(url)));
+        match response {
+            Ok(response) => {
+                if response.status_code == 200 {
+                    Ok(response.body)
+                } else {
+                    Err(Error::RemoteManifestFetch(format!(
+                        "fetch failed: code: {}",
+                        response.status_code
+                    )))
+                }
+            }
+            Err(e) => Err(Error::RemoteManifestFetch(e.to_string())),
+        }
+    }
+
     /// Return Store from in memory asset
     pub fn load_cai_from_memory(
         asset_type: &str,
