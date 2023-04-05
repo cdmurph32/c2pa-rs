@@ -106,8 +106,8 @@ openssl = { version = "0.10.31", optional = true }
 getrandom = "0.2.7"
 instant = { version = "0.1.12", features = ["inaccurate"] }
 uuid = { version = "0.8.1", features = ["serde", "v4"] }
-wasmbus-rpc = "0.9"
-wasmcloud-interface-httpclient = "0.6.0"
+wasmbus-rpc = "0.11"
+wasmcloud-interface-httpclient = "0.8"
 
 [target.'cfg(all(target_arch = "wasm32", not(target_os = "wasi")))'.dependencies]
 console_log = { version = "0.2", features = ["color"] }
