@@ -81,7 +81,7 @@ mp4 = "0.13.0"
 png_pong = "0.8.2"
 range-set = "0.0.9"
 riff = "1.0.1"
-ring = { package = "ring-wasi", git = "https://github.com/jedisct1/ring-wasi", branch = "0.16.20" }
+ring = { git = "https://github.com/wasix-org/ring", branch = "wasix" }
 schemars = { version = "0.8.12", optional = true }
 serde = { version = "1.0.137", features = ["derive"] }
 serde_bytes = "0.11.5"
