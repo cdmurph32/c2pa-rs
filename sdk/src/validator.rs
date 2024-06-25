@@ -37,7 +37,7 @@ pub(crate) trait CoseValidator {
 pub struct DummyValidator;
 impl CoseValidator for DummyValidator {
     fn validate(&self, _sig: &[u8], _data: &[u8], _pkey: &[u8]) -> Result<bool> {
-        println!("This signature verified by DummyValidator.  Results not valid!");
+        //println!("This signature verified by DummyValidator.  Results not valid!");
         Ok(true)
     }
 }

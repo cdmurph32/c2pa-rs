@@ -44,6 +44,7 @@ pub trait Signer {
 }
 
 /// Trait to allow loading of signing credential from external sources
+#[allow(dead_code)]
 pub(crate) trait ConfigurableSigner: Signer + Sized {
     /// Create signer form credential files
     #[cfg(feature = "file_io")]
