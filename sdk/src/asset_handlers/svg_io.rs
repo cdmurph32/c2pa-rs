@@ -226,7 +226,7 @@ fn detect_manifest_location(
     loop {
         match xml_reader.read_event_into(&mut buf) {
             Ok(Event::Start(ref e)) => {
-                let name = String::from_utf8_lossy(e.name().as_ref()).into_owned();
+                let name = String::from_utf8_lossy(e.name().0).into_owned();
                 xml_path.push(name);
 
                 if xml_path.len() == 2 && xml_path[0] == SVG && xml_path[1] == METADATA {
@@ -291,7 +291,7 @@ fn read_xmp(input_stream: &mut dyn CAIRead) -> Result<(Option<String>, DetectedT
     loop {
         match xml_reader.read_event_into(&mut buf) {
             Ok(Event::Start(ref e)) => {
-                let name: String = String::from_utf8_lossy(e.name().as_ref()).into_owned();
+                let name: String = String::from_utf8_lossy(e.name().0).into_owned();
                 xml_path.push(name);
 
                 if xml_path.len() == 1 && xml_path[0] == SVG {
@@ -306,7 +306,7 @@ fn read_xmp(input_stream: &mut dyn CAIRead) -> Result<(Option<String>, DetectedT
             }
             Ok(Event::PI(e)) => {
                 let possible_insertion_point = xml_reader.buffer_position();
-                let pi = String::from_utf8_lossy(e.content());
+                let pi = String::from_utf8_lossy(&e);
 
                 if pi.contains(XPACKET) && pi.contains(XMP_ID) {
                     // reconstruct opening XMP PI tag
@@ -404,10 +404,12 @@ impl CAIWriter for SvgIO {
         match detected_tag_location {
             DetectedTagsDepth::Metadata => {
                 // add manifest case
+                let manifest_data = create_manifest_tag(store_bytes, false)?;
+                println!("manifest_data {:?}", &manifest_data);
                 loop {
                     match reader.read_event_into(&mut buf) {
                         Ok(Event::Start(e)) => {
-                            let name = String::from_utf8_lossy(e.name().as_ref()).into_owned();
+                            let name = String::from_utf8_lossy(e.name().0).into_owned();
                             xml_path.push(name);
 
                             // writes the event to the writer
@@ -443,7 +445,7 @@ impl CAIWriter for SvgIO {
                 loop {
                     match reader.read_event_into(&mut buf) {
                         Ok(Event::Start(e)) => {
-                            let name = String::from_utf8_lossy(e.name().as_ref()).into_owned();
+                            let name = String::from_utf8_lossy(e.name().0).into_owned();
                             xml_path.push(name);
 
                             // writes the event to the writer
@@ -485,7 +487,7 @@ impl CAIWriter for SvgIO {
                 loop {
                     match reader.read_event_into(&mut buf) {
                         Ok(Event::Start(e)) => {
-                            let name = String::from_utf8_lossy(e.name().as_ref()).into_owned();
+                            let name = String::from_utf8_lossy(e.name().0).into_owned();
                             xml_path.push(name);
 
                             // writes the event to the writer
@@ -579,7 +581,7 @@ impl CAIWriter for SvgIO {
         loop {
             match reader.read_event_into(&mut buf) {
                 Ok(Event::Start(e)) => {
-                    let name = String::from_utf8_lossy(e.name().as_ref()).into_owned();
+                    let name = String::from_utf8_lossy(e.name().0).into_owned();
                     xml_path.push(name);
 
                     if xml_path.len() == 3
